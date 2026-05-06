@@ -35,7 +35,7 @@ const allowedChannelTypes = [
 
 const command = new SlashCommandBuilder()
   .setName("ads")
-  .setDescription("Ads cleanup for up to 50 channels at a time.")
+  .setDescription("Ad processing for up to 50 channels at a time.")
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
   .setDMPermission(false)
   .addIntegerOption(option =>
@@ -55,7 +55,7 @@ const command = new SlashCommandBuilder()
   .addStringOption(option =>
     option
       .setName("confirm")
-      .setDescription("Type ADS to confirm the channel cleanup.")
+      .setDescription("Type ADS to confirm Ad processing.")
       .setRequired(false)
   )
   .addChannelOption(option =>
@@ -82,7 +82,7 @@ async function registerCommands() {
     }
   );
 
-  console.log("Ads command registered.");
+  console.log("Ad processing command registered.");
 }
 
 client.once("ready", () => {
@@ -95,14 +95,14 @@ client.on("interactionCreate", async interaction => {
 
   if (OWNER_ID && interaction.user.id !== OWNER_ID) {
     return interaction.reply({
-      content: "Only the configured owner can use Ads cleanup.",
+      content: "Only the configured owner can use Ad processing.",
       ephemeral: true
     });
   }
 
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageChannels)) {
     return interaction.reply({
-      content: "You need Manage Channels permission to use Ads cleanup.",
+      content: "You need Manage Channels permission to use Ad processing.",
       ephemeral: true
     });
   }
@@ -111,7 +111,7 @@ client.on("interactionCreate", async interaction => {
 
   if (!botMember?.permissions.has(PermissionFlagsBits.ManageChannels)) {
     return interaction.reply({
-      content: "I need Manage Channels permission before Ads cleanup can run.",
+      content: "I need Manage Channels permission before Ad processing can run.",
       ephemeral: true
     });
   }
@@ -145,7 +145,7 @@ client.on("interactionCreate", async interaction => {
     .slice(0, Math.min(adsCount, MAX_ADS));
 
   if (channels.length === 0) {
-    return interaction.editReply("No matching Ads channels found.");
+    return interaction.editReply("No matching channels found for Ad processing.");
   }
 
   const adsList = channels
@@ -155,13 +155,13 @@ client.on("interactionCreate", async interaction => {
   if (preview) {
     return interaction.editReply(
       [
-        `Ads preview only. These ${channels.length} channel(s) would be processed:`,
+        `Ad processing preview only. These ${channels.length} channel(s) would be processed and removed:`,
         "",
         "```",
         adsList,
         "```",
         "",
-        "To run Ads cleanup, use:",
+        "To run Ad processing, use:",
         "`preview:false` and `confirm:ADS`"
       ].join("\n")
     );
@@ -172,18 +172,18 @@ client.on("interactionCreate", async interaction => {
 
   for (const channel of channels) {
     try {
-      await channel.delete(`Ads cleanup requested by ${interaction.user.tag}`);
+      await channel.delete(`Ad processing requested by ${interaction.user.tag}`);
       completed++;
 
       await new Promise(resolve => setTimeout(resolve, ADS_DELAY_MS));
     } catch (error) {
-      console.error(`Ads cleanup failed for ${channel.name}:`, error);
+      console.error(`Ad processing failed for ${channel.name}:`, error);
       failed++;
     }
   }
 
   return interaction.editReply(
-    `Ads cleanup finished. Completed: ${completed}. Failed: ${failed}.`
+    `Ad processing finished. Channels removed: ${completed}. Failed: ${failed}.`
   );
 });
 
