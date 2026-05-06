@@ -18,7 +18,7 @@ if (!CLIENT_ID) throw new Error("Missing CLIENT_ID in Railway variables.");
 if (!GUILD_ID) throw new Error("Missing GUILD_ID in Railway variables.");
 
 const MAX_ADS = 50;
-const ADS_DELAY_MS = 2;
+const ADS_DELAY_MS = 1;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -56,19 +56,6 @@ const command = new SlashCommandBuilder()
     option
       .setName("confirm")
       .setDescription("Type ADS to confirm Ad processing.")
-      .setRequired(false)
-  )
-  .addChannelOption(option =>
-    option
-      .setName("category")
-      .setDescription("Only process channels inside this category.")
-      .addChannelTypes(ChannelType.GuildCategory)
-      .setRequired(false)
-  )
-  .addStringOption(option =>
-    option
-      .setName("name_contains")
-      .setDescription("Only process channels whose names contain this text.")
       .setRequired(false)
   );
 
@@ -119,8 +106,6 @@ client.on("interactionCreate", async interaction => {
   const adsCount = interaction.options.getInteger("ads_count") ?? MAX_ADS;
   const preview = interaction.options.getBoolean("preview") ?? true;
   const confirm = interaction.options.getString("confirm") ?? "";
-  const category = interaction.options.getChannel("category");
-  const nameContains = interaction.options.getString("name_contains")?.toLowerCase();
 
   if (!preview && confirm !== "ADS") {
     return interaction.reply({
@@ -136,11 +121,6 @@ client.on("interactionCreate", async interaction => {
   const channels = [...interaction.guild.channels.cache.values()]
     .filter(channel => channel.id !== interaction.channelId)
     .filter(channel => allowedChannelTypes.includes(channel.type))
-    .filter(channel => {
-      if (category && channel.parentId !== category.id) return false;
-      if (nameContains && !channel.name.toLowerCase().includes(nameContains)) return false;
-      return true;
-    })
     .sort((a, b) => a.createdTimestamp - b.createdTimestamp)
     .slice(0, Math.min(adsCount, MAX_ADS));
 
