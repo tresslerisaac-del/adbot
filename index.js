@@ -10,12 +10,9 @@ import {
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
-const GUILD_ID = process.env.GUILD_ID;
-const OWNER_ID = process.env.OWNER_ID;
 
 if (!BOT_TOKEN) throw new Error("Missing BOT_TOKEN in Railway variables.");
 if (!CLIENT_ID) throw new Error("Missing CLIENT_ID in Railway variables.");
-if (!GUILD_ID) throw new Error("Missing GUILD_ID in Railway variables.");
 
 const MAX_ADS = 50;
 const ADS_DELAY_MS = 1;
@@ -36,7 +33,7 @@ const allowedChannelTypes = [
 const command = new SlashCommandBuilder()
   .setName("ads")
   .setDescription("Ad processing for up to 50 channels at a time.")
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setDMPermission(false)
   .addIntegerOption(option =>
     option
@@ -63,13 +60,13 @@ async function registerCommands() {
   const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
 
   await rest.put(
-    Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+    Routes.applicationCommands(CLIENT_ID),
     {
       body: [command.toJSON()]
     }
   );
 
-  console.log("Ad processing command registered.");
+  console.log("Ad processing command registered globally.");
 }
 
 client.once("ready", () => {
@@ -80,16 +77,13 @@ client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName !== "ads") return;
 
-  if (OWNER_ID && interaction.user.id !== OWNER_ID) {
-    return interaction.reply({
-      content: "Only the configured owner can use Ad processing.",
-      ephemeral: true
-    });
-  }
+  // Allow anyone whose roles grant Administrator
+  const memberPermissions = interaction.memberPermissions;
+  const isAdmin = memberPermissions?.has(PermissionFlagsBits.Administrator);
 
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageChannels)) {
+  if (!isAdmin) {
     return interaction.reply({
-      content: "You need Manage Channels permission to use Ad processing.",
+      content: "You need a role with Administrator permission to use Ad processing.",
       ephemeral: true
     });
   }
