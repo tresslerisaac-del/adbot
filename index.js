@@ -18,7 +18,7 @@ if (!CLIENT_ID) throw new Error("Missing CLIENT_ID in Railway variables.");
 if (!GUILD_ID) throw new Error("Missing GUILD_ID in Railway variables.");
 
 const MAX_ADS = 50;
-const ADS_DELAY_MS = 1200;
+const ADS_DELAY_MS = 2;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
